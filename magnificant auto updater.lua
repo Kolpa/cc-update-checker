@@ -1,4 +1,4 @@
-function loadscreen(parts,done,text)
+local function loadscreen(parts,done,text)
   clearscreen()
   
   print(text.."\n")
@@ -21,7 +21,7 @@ function loadscreen(parts,done,text)
 end
 
 
-function clearscreen()
+local function clearscreen()
 	term.clear()
 	term.setCursorPos(1,1)
 end
@@ -38,12 +38,18 @@ local raw = JSON:decode(repo:readAll())
 
 loadscreen(2,2,"Welcome to the CommuteOS Installer loading now ... \n\n")
 
-clearscreen()
+loadscreen(0,#raw,"Downloading Files \n\n")
+
 for x=1,#raw do
+
   if raw[x].type == "file" then
+  
     local dl = http.get(raw[x]._links.html:gsub("blob","raw")):readAll()
 	local tmp = fs.open(raw[x].path,"w")
 	tmp.write(dl)
 	tmp.close()
+	
   end
+  
+  loadscreen(x,#raw,"Downloading Files \n\n")
 end
