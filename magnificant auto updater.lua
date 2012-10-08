@@ -1,4 +1,4 @@
-local function loadscreen(parts,done,text)
+function loadscreen(parts,done,text)
   clearscreen()
   
   print(text.."\n")
@@ -20,8 +20,17 @@ local function loadscreen(parts,done,text)
   write("]\n")
 end
 
-
-local function clearscreen()
+function tblc(st,tb)
+  if tb == nil then
+    return false
+  else
+    for x=1,#tb do
+      if tb[x] == st then return true end
+    end
+   	return false
+  end
+end
+function clearscreen()
 	term.clear()
 	term.setCursorPos(1,1)
 end
@@ -38,18 +47,58 @@ local raw = JSON:decode(repo:readAll())
 
 loadscreen(2,2,"Welcome to the CommuteOS Installer loading now ... \n\n")
 
-loadscreen(0,#raw,"Downloading Files \n\n")
+clearscreen()
 
+loadscreen(3,0,"Prepearing Data ... \n\n")
+local dirs = {}
+local y = 1
+local files = {}
+local filename = {}
 for x=1,#raw do
-
-  if raw[x].type == "file" then
-  
-    local dl = http.get(raw[x]._links.html:gsub("blob","raw")):readAll()
-	local tmp = fs.open(raw[x].path,"w")
-	tmp.write(dl)
-	tmp.close()
-	
+  if raw[x].type == "dir" then
+    table.insert(dirs,raw[x]._links.self)
   end
-  
-  loadscreen(x,#raw,"Downloading Files \n\n")
+end
+
+loadscreen(3,1,"Prepearing Data ... \n\n")
+
+while y <= #dirs do
+  local teme = http.get(dirs[y])
+  local data = JSON:decode(teme:readAll())
+    for z=1,#data do
+      if data[z].type == "dir" then
+        table.insert(dirs,data[z]._links.self)
+      end
+    end
+  y=y+1
+end
+
+table.insert(dirs,"https://api.github.com/repos/CommuteOS/CommuteOS/contents")
+
+loadscreen(3,2,"Prepearing Data ... \n\n")
+
+for w=1,#dirs do
+  local teme2 = http.get(dirs[w])
+  local data2 = JSON:decode(teme2:readAll())
+    for v=1,#data2 do
+	  if data2[v].type == "file" then
+	    local url = data2[v]._links.html:gsub("blob","raw")
+	    table.insert(files,url)
+		table.insert(filename,data2[v].name)
+	  end
+	end
+end
+
+fs.makeDir("Download")
+
+loadscreen(3,3,"Prepearing Data ... \n\n")
+
+loadscreen(#files,0,"Downloading files ... \n\n")
+for u=1,#files do
+  local fname = filename[u]
+  local filex = http.get(files[u]):readAll()
+  local file = fs.open("Download/"..fname,"w")
+  file.write(filex)
+  file.close()
+  loadscreen(#files,u,"Downloading files ... \n\n")
 end
