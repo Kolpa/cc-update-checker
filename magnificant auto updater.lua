@@ -35,17 +35,23 @@ function clearscreen()
 	term.setCursorPos(1,1)
 end
 
-loadscreen(2,0,"Welcome to the CommuteOS Installer loading now ... \n\n")
+function save(url)
+	repeat
+		temp = http.get(url.."?client_id=51c669aba2c0fa9a0fd6&client_secret=d39a4a86a8b55fae2295b971b0abd7edeb61daf8")
+	until temp ~= nil
+	return temp:readAll()
+end
 
-local dec = http.get("http://regex.info/code/JSON.lua")
-local JSON = loadstring(dec:readAll())()
+loadscreen(2,0,"Welcome to the Github Downloader loading now ... \n\n")
 
-loadscreen(2,1,"Welcome to the CommuteOS Installer loading now ... \n\n")
+JSON = (loadfile "json.txt")()
 
-local repo = http.get("https://api.github.com/repos/CommuteOS/CommuteOS/contents")
-local raw = JSON:decode(repo:readAll())
+loadscreen(2,1,"Welcome to the Github Downloader loading now ... \n\n")
 
-loadscreen(2,2,"Welcome to the CommuteOS Installer loading now ... \n\n")
+local repo = save("https://api.github.com/repos/Kolpa/PhpCode/contents")
+local raw = JSON:decode(repo)
+
+loadscreen(2,2,"Welcome to the Github Downloader loading now ... \n\n")
 
 clearscreen()
 
@@ -63,8 +69,8 @@ end
 loadscreen(3,1,"Prepearing Data ... \n\n")
 
 while y <= #dirs do
-  local teme = http.get(dirs[y])
-  local data = JSON:decode(teme:readAll())
+  local teme = save(dirs[y])
+  local data = JSON:decode(teme)
     for z=1,#data do
       if data[z].type == "dir" then
         table.insert(dirs,data[z]._links.self)
@@ -73,31 +79,34 @@ while y <= #dirs do
   y=y+1
 end
 
-table.insert(dirs,"https://api.github.com/repos/CommuteOS/CommuteOS/contents")
+table.insert(dirs,"https://api.github.com/repos/Kolpa/PhpCode/contents")
 
 loadscreen(3,2,"Prepearing Data ... \n\n")
 
 for w=1,#dirs do
-  local teme2 = http.get(dirs[w])
-  local data2 = JSON:decode(teme2:readAll())
+  local teme2 = save(dirs[w])
+  local data2 = JSON:decode(teme2)
     for v=1,#data2 do
 	  if data2[v].type == "file" then
 	    local url = data2[v]._links.html:gsub("blob","raw")
 	    table.insert(files,url)
-		table.insert(filename,data2[v].name)
+		table.insert(filename,data2[v].path)
 	  end
 	end
 end
-
-fs.makeDir("Download")
 
 loadscreen(3,3,"Prepearing Data ... \n\n")
 
 loadscreen(#files,0,"Downloading files ... \n\n")
 for u=1,#files do
-  local fname = filename[u]
-  local filex = http.get(files[u]):readAll()
-  local file = fs.open("Download/"..fname,"w")
+  fname = filename[u]
+  filex = save(files[u])
+  dir = fs.combine(fname, "..")
+  if fs.isDir(dir) then
+  else
+    fs.makeDir(dir)
+  end
+  file = fs.open(fname,"w")
   file.write(filex)
   file.close()
   loadscreen(#files,u,"Downloading files ... \n\n")
