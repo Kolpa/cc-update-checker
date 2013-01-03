@@ -14,10 +14,23 @@ local function getLocal()
 end
 
 local function getOnline(user, repo)
-	local query = "https://api.github.com/repos/"..user.."/"..repo.."/commits?per_page=100"
+	local size = 0
+	local query = "https://api.github.com/repos/"..user.."/"..repo.."/commits"
 	local request = http.get(query).readAll()
 	local data = JSON.decode(request)
-	return #data
+	size = size + #data
+	local sha = data[#data].sha
+	repeat
+		local query = "https://api.github.com/repos/"..user.."/"..repo.."/commits?sha="..sha
+		local request = http.get(query).readAll()
+		local data = JSON.decode(request)
+		if #data ~= 1 then
+			size = size + #data
+			size = size - 1
+		end
+		sha = data[#data].sha
+	until #data == 1
+	return size
 end
 
 local function setLocal(ver)
@@ -29,6 +42,7 @@ end
 function updater.update(funcToRun, user, repo)
 	local onl = getOnline(user, repo)
 	local loc = getLocal()
+	print(onl)
 	if onl > loc then
 		funcToRun()
 		setLocal(onl)
