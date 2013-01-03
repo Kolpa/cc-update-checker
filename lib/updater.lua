@@ -75,7 +75,7 @@ function updater.new()
 		file.write(new)
 		file.close()
 		setLocal(onl, false)
-		print("done Restarting")
+		print("Restarting now")
 		sleep(1)
 		shell.run(shell.getRunningProgram())
 	end
