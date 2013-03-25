@@ -60,8 +60,8 @@ function updater.update(funcToRun, user, repo)
 	local onl = getOnline(user, repo)
 	local loc = getLocal(true)
 	if onl > loc then
-		funcToRun()
 		setLocal(onl, true)
+		funcToRun()
 	end
 end
 
